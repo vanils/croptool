@@ -10,33 +10,61 @@ module.exports = function (grunt) {
 
         uglify: {
             options: {
-                banner: grunt.file.read('src/banner.js')
+                banner: grunt.file.read('src/scripts/banner.js')
             },
 
             build: {
-                src: 'src/core.js',
+                src: 'src/scripts/core.js',
                 dest: 'build/jquery.croptool.min.js'
+            }
+        },
+
+        sass: {
+            expanded: {
+                options: {
+                    style: 'expanded'
+                },
+                files: {
+                    'build/jquery.croptool.css': 'src/styles/main.scss'
+                }
+            },
+
+            compressed: {
+                options: {
+                    style: 'compressed'
+                },
+                files: {
+                    'build/jquery.croptool.min.css': 'src/styles/main.scss'
+                }
             }
         },
 
         watch: {
             scripts: {
                 options: {
-                    spawn: false,
+                    spawn: false
                 },
 
-                files: ['src/**/*.js'],
+                files: ['src/scripts/**/*.js'],
                 tasks: ['jshint', 'concat', 'uglify']
             },
+            styles: {
+                options: {
+                    spawn: false
+                },
+
+                files: ['src/styles/**/*.scss'],
+                tasks: ['sass']
+            }
         },
 
         concat: {
             scripts: {
                 options: {
-                    banner: grunt.file.read('src/banner.js')
+                    banner: grunt.file.read('src/scripts/banner.js')
                 },
 
-                src: ['src/core.js'],
+                src: ['src/scripts/core.js'],
                 dest: 'build/jquery.croptool.js',
             }
         }
@@ -46,6 +74,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-sass');
 
     grunt.registerTask('default', ['watch']);
 };
