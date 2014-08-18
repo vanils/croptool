@@ -1,126 +1,141 @@
 
 $point-size: 6px;
 
-.croptool-container {
-    overflow: hidden;
-    position: relative;
-    display: inline-block;
-    margin: 5px;
+.croptool-wrapper {
+    padding: 20px;
+    max-width: 100%;
+    max-width: 700px;
 
-    img {
-        pointer-events: none;
-    }
+    .croptool-container {
+        overflow: hidden;
+        position: relative;
+        display: block;
 
-    .croptool-selection {
-        top: 23%;
-        left: 23%;
-        width: 67%;
-        height: 56%;
-        position: absolute;
-        border: 1px dashed #B7B7B7;
-        outline-color: #000;
-        outline-color: rgba(0, 0, 0, 0.8);
-        outline-style: solid;
-        outline-width: 65534px;
-
-        .croptool-point {
-            position: absolute;
-            background: #FFF;
-            width: $point-size;
-            height: $point-size;
-            top: auto;
-            left: auto;
-            bottom: auto;
-            right: auto;
+        img {
+            pointer-events: none;
+            display: block;
+            width: 100%;
+            height: auto;
         }
 
-        .croptool-point-top {
-            margin: -4px 0 0 -3px;
-            left: 50%;
-        }
-
-        .croptool-point-top-right {
-            margin: -4px -4px 0 0;
-            right: 0;
-        }
-
-        .croptool-point-right {
-            margin: -3px -4px 0 0;
-            top: 50%;
-            right: 0;
-        }
-
-        .croptool-point-bottom-right {
-            margin: 0 -4px -4px 0;
-            right: 0;
-            bottom: 0;
-        }
-
-        .croptool-point-bottom {
-            margin: 0 0 -4px -3px;
-            left: 50%;
-            bottom: 0;
-        }
-
-        .croptool-point-bottom-left {
-            margin: 0 0 -4px -4px;
-            left: 0;
-            bottom: 0;
-        }
-
-        .croptool-point-left {
-            margin: -3px 0 0 -4px;
-            left: 0;
-            top: 50%;
-        }
-
-        .croptool-point-top-left {
-            margin: -4px 0 0 -4px;
-            left: 0;
+        .croptool-selection {
+            -webkit-tranform: translate3d(0,0,0);
+            display: none;
             top: 0;
-        }
-
-        &.no-points {
+            left: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+            border: 1px dashed #B7B7B7;
+            outline-color: #000;
+            outline-color: rgba(0, 0, 0, 0.8);
+            outline-style: solid;
+            outline-width: 5120px;
 
             .croptool-point {
-                display: none;
+                position: absolute;
+                background: #FFF;
+                width: $point-size;
+                height: $point-size;
+                top: auto;
+                left: auto;
+                bottom: auto;
+                right: auto;
             }
-        }
 
-        &.no-outline {
+            .croptool-point-top {
+                margin: -4px 0 0 -3px;
+                left: 50%;
+            }
+
+            .croptool-point-top-right {
+                margin: -4px -4px 0 0;
+                right: 0;
+            }
+
+            .croptool-point-right {
+                margin: -3px -4px 0 0;
+                top: 50%;
+                right: 0;
+            }
+
+            .croptool-point-bottom-right {
+                margin: 0 -4px -4px 0;
+                right: 0;
+                bottom: 0;
+            }
+
+            .croptool-point-bottom {
+                margin: 0 0 -4px -3px;
+                left: 50%;
+                bottom: 0;
+            }
+
+            .croptool-point-bottom-left {
+                margin: 0 0 -4px -4px;
+                left: 0;
+                bottom: 0;
+            }
+
+            .croptool-point-left {
+                margin: -3px 0 0 -4px;
+                left: 0;
+                top: 50%;
+            }
+
+            .croptool-point-top-left {
+                margin: -4px 0 0 -4px;
+                left: 0;
+                top: 0;
+            }
 
             .croptool-remnant {
-                position: absolute;
-                background: #000;
-                background: rgba(0, 0, 0, 0.8);
+                display: none;
             }
 
-            .croptool-remnant-top {
-                top: -1000001px;
-                left: -1px;
-                right: -1px;
-                height: 1000000px;
+            &.no-dots {
+
+                .croptool-point {
+                    display: none;
+                }
             }
 
-            .croptool-remnant-right {
-                top: -500000px;
-                right: -1000001px;
-                width: 1000000px;
-                height: 1000000px;
-            }
+            &.no-outline {
 
-            .croptool-remnant-bottom {
-                bottom: -1000001px;
-                left: -1px;
-                right: -1px;
-                height: 1000000px;
-            }
+                .croptool-remnant {
+                    display: block;
+                    position: absolute;
+                    background: #000;
+                    background: rgba(0, 0, 0, 0.8);
+                }
 
-            .croptool-remnant-left {
-                bottom: -500000px;
-                left: -1000001px;
-                width: 1000000px;
-                height: 1000000px;
+                .croptool-remnant-top {
+                    top: -10001px;
+                    left: -1px;
+                    right: -1px;
+                    height: 10000px;
+                }
+
+                .croptool-remnant-right {
+                    top: -5000px;
+                    right: -10001px;
+                    width: 10000px;
+                    height: 10000px;
+                }
+
+                .croptool-remnant-bottom {
+                    bottom: -10001px;
+                    left: -1px;
+                    right: -1px;
+                    height: 10000px;
+                }
+
+                .croptool-remnant-left {
+                    bottom: -5000px;
+                    left: -10001px;
+                    width: 10000px;
+                    height: 10000px;
+                }
             }
         }
     }
