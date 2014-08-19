@@ -5,6 +5,11 @@
 
 var Croptool;
 
+/*
+ *
+ * Constructor for single Croptool instance.
+ *
+ */
 Croptool = function ( element, options ) {
 
     var that = this;
@@ -25,17 +30,70 @@ Croptool = function ( element, options ) {
     });
 };
 
+/*
+ *
+ * Mode where selection has origin on center.
+ *
+ */
 Croptool.MODE_CENTER = 1;
+
+/*
+ *
+ * Mode where selection has origin on opposite corner/side of mouse pointer.
+ *
+ */
 Croptool.MODE_NORMAL = 2;
 
+/*
+ *
+ * State where no resizing or moving is happening.
+ *
+ */
 Croptool.STATE_NULL = 3;
+
+/*
+ *
+ * State where selection is movable.
+ *
+ */
 Croptool.STATE_MOVE = 4;
+
+/*
+ *
+ * State where selection is resisable.
+ *
+ */
 Croptool.STATE_RESIZE = 5;
 
+/*
+ *
+ * Selection is resized only on vertical axis. This happens when mouse is on
+ * top or bottom side of selection.
+ *
+ */
 Croptool.DIRECTION_VERTICAL = 6;
+
+/*
+ *
+ * Selection is resized only on horizontal axis. This happens when mouse is on
+ * left or right side of selection.
+ *
+ */
 Croptool.DIRECTION_HORIZONTAL = 7;
+
+/*
+ *
+ * Selection is resized only on both axis. This happens when mouse is on any
+ * corner of selection.
+ *
+ */
 Croptool.DIRECTION_BOTH = 8;
 
+/*
+ *
+ * Some default values for croptool.
+ *
+ */
 Croptool.defaults = {
     dots: true,
     keyboard: true,
@@ -43,6 +101,51 @@ Croptool.defaults = {
     movable: true,
     resizable: true,
     persistent: true
+};
+
+/*
+ *
+ * Contains cursors for different situations. Structure of this object is made
+ * to help to pick cursor with value of origin.
+ *
+ */
+Croptool.cursors = {
+
+    x0: {
+
+        // mouse on bottom right
+        y0: 'nwse-resize',
+
+        // mouse on right
+        y50: 'ew-resize',
+
+        // mouse on top right
+        y100: 'nesw-resize'
+    },
+
+    x50: {
+
+        // mouse on bottom center
+        y0: 'ns-resize',
+
+        // mouse on center
+        y50: 'move',
+
+        // mouse on top center
+        y100: 'ns-resize'
+    },
+
+    x100: {
+
+        // mouse on bottom left
+        y0: 'nesw-resize',
+
+        // mouse on left
+        y50: 'ew-resize',
+
+        // mouse on top left
+        y100: 'nwse-resize'
+    }
 };
 
 /*
@@ -88,6 +191,12 @@ Croptool.template = (function () {
 
 }());
 
+/*
+ *
+ * Checking if browser supports animation frames. Animation frames are used to
+ * optimize selection redraws.
+ *
+ */
 Croptool.requestAnimationFrame = (function () {
 
     var requestAnimationFrames = [
@@ -191,7 +300,7 @@ Croptool.prototype.createDOM = function ( element ) {
 
 /*
  *
- * Attaching listeners for mouse/touch events.
+ * Attaching all neccessary listeners.
  *
  */
 Croptool.prototype.attachListeners = function () {
@@ -246,6 +355,12 @@ Croptool.prototype.attachListeners = function () {
     });
 };
 
+/*
+ *
+ * Manipulating some options to fit the rest of the system. Also getting image
+ * real width and height if not gotten from options.
+ *
+ */
 Croptool.prototype.initOptions = function ( callback ) {
 
     var that = this,
@@ -255,7 +370,7 @@ Croptool.prototype.initOptions = function ( callback ) {
 
     /*
      *
-     * Synchronous initializations
+     * Delayed initializations
      *
      */
     doInit = function () {
@@ -289,21 +404,31 @@ Croptool.prototype.initOptions = function ( callback ) {
         }
 
         if (typeof options.min === 'undefined') {
+
+            // default min values
             options.min = {
                 w: 0,
                 h: 0,
-                wp: 0,
-                hp: 0
+                wp: 0,  // min width in percents
+                hp: 0   // min height in percents
             };
 
         } else {
+
+            // min width in percents
             options.min.wp = options.min.w / options.real.w;
+
+            // min height in percents
             options.min.hp = options.min.h / options.real.h;
         }
 
+        // max width in percents
         options.max.wp = options.max.w / options.real.w;
+
+        // max height in percents
         options.max.hp = options.max.h / options.real.h;
 
+        // initial selection
         if (options.selection) {
             that.selection = that.convertSelection(options.selection, true);
         }
@@ -315,7 +440,8 @@ Croptool.prototype.initOptions = function ( callback ) {
 
     /*
      *
-     * Asynchronous initialization
+     * If image real width and height is not set as options, they must be
+     * sniffed.
      *
      */
     if (!options.real) {
@@ -329,6 +455,7 @@ Croptool.prototype.initOptions = function ( callback ) {
                 h: image.prop('height')
             };
 
+            // do other initializations
             doInit();
 
         });
@@ -336,10 +463,18 @@ Croptool.prototype.initOptions = function ( callback ) {
         image.attr('src', that.element.src + '?' + (new Date()).getTime());
 
     } else {
+
+        // do other initializations
         doInit();
     }
 };
 
+/*
+ *
+ * Called after selection has changed. Updates visual selection on DOM, but
+ * tries to optimize drawing with requestAnimationFrame if available.
+ *
+ */
 Croptool.prototype.requestUpdate = function () {
 
     var that = this;
@@ -360,11 +495,22 @@ Croptool.prototype.requestUpdate = function () {
             that.doUpdate();
         });
 
+    /*
+     *
+     * if animation frames are not available, just update straight away
+     *
+     */
     } else {
         that.doUpdate();
     }
 };
 
+/*
+ *
+ * This updates DOM according to data in selection object. Invoked only by
+ * requestUpdate method.
+ *
+ */
 Croptool.prototype.doUpdate = function () {
 
     this.elements.$selection.css('display', 'none');
@@ -394,6 +540,12 @@ Croptool.prototype.convertPoint = function ( values ) {
     };
 };
 
+/*
+ *
+ * Convert pixel selection to percentage selection or percentage selection to
+ * pizel selection.
+ *
+ */
 Croptool.prototype.convertSelection = function ( selection, reversed ) {
 
     var options = this.options,
@@ -402,6 +554,11 @@ Croptool.prototype.convertSelection = function ( selection, reversed ) {
         max,
         min;
 
+    /*
+     *
+     * Pixel selection to percentage selection
+     *
+     */
     if (reversed) {
 
         return {
@@ -411,6 +568,11 @@ Croptool.prototype.convertSelection = function ( selection, reversed ) {
             h: selection.h / options.real.h
         };
 
+    /*
+     *
+     * Percentage selection to pixel selection
+     *
+     */
     } else {
 
         max = options.max;
@@ -423,6 +585,11 @@ Croptool.prototype.convertSelection = function ( selection, reversed ) {
             h: Math.round(selection.h * options.real.h)
         };
 
+        /*
+         *
+         * Making sure the selection is not smaller than min selection size
+         *
+         */
         if (min) {
 
             if (typeof min.w !== 'undefined') {
@@ -440,6 +607,11 @@ Croptool.prototype.convertSelection = function ( selection, reversed ) {
             }
         }
 
+        /*
+         *
+         * Making sure the selection is not bigger than max selection size
+         *
+         */
         if (max) {
 
             if (typeof max.w !== 'undefined') {
@@ -457,12 +629,24 @@ Croptool.prototype.convertSelection = function ( selection, reversed ) {
             }
         }
 
+        /*
+         *
+         * Making sure selection area is inside real image area on horizontal
+         * axis
+         *
+         */
         range = converted.x + converted.w;
 
         if (range > options.real.w) {
             converted.x -= range - options.real.w;
         }
 
+        /*
+         *
+         * Making sure selection area is inside real image area on vertical
+         * axis
+         *
+         */
         range = converted.y + converted.h;
 
         if (range > options.real.h) {
@@ -542,18 +726,29 @@ Croptool.prototype.getOrigin = function ( point ) {
         x,
         y;
 
-    if (sel) {
-        if (point.x >= sel.x - mar && point.x <= sel.x + mar) {
-            x = 1;
-        } else if (point.x >= sel.x + sel.w - mar && point.x <= sel.x + sel.w + mar) {
-            x = 0;
-        }
+    /*
+     *
+     * If there is no selection, there is no origin.
+     *
+     */
+    if (!sel) {
+        return;
+    }
 
-        if (point.y >= sel.y - mar && point.y <= sel.y + mar) {
-            y = 1;
-        } else if (point.y >= sel.y + sel.h - mar && point.y <= sel.y + sel.h + mar) {
-            y = 0;
-        }
+    if (point.x >= sel.x - mar && point.x <= sel.x + mar) {
+        x = 1;
+    } else if (point.x >= sel.x + sel.w - mar && point.x <= sel.x + sel.w + mar) {
+        x = 0;
+    } else if (point.x >= sel.x - mar && point.x <= sel.x + sel.w + mar) {
+        x = 0.5;
+    }
+
+    if (point.y >= sel.y - mar && point.y <= sel.y + mar) {
+        y = 1;
+    } else if (point.y >= sel.y + sel.h - mar && point.y <= sel.y + sel.h + mar) {
+        y = 0;
+    } else if (point.y >= sel.y - mar && point.y <= sel.y + sel.h + mar) {
+        y = 0.5;
     }
 
     return {
@@ -564,19 +759,34 @@ Croptool.prototype.getOrigin = function ( point ) {
 
 Croptool.prototype.applyOrigin = function ( origin ) {
 
-    var x = origin.x,
-        y = origin.y;
+    var middle = 0.5,
+        x,
+        y;
 
-    if (typeof x === 'undefined' && typeof y === 'undefined') {
+    /*
+     *
+     * If there is no origin, state must be null and no resizing or moving
+     * should happen.
+     *
+     */
+    if (typeof origin === 'undefined') {
+        this.state = Croptool.STATE_NULL;
+        return;
+    }
+
+    x = origin.x;
+    y = origin.y;
+
+    if (x === middle && y === middle) {
         this.state = Croptool.STATE_MOVE;
         return;
     }
 
     this.state = Croptool.STATE_RESIZE;
 
-    if (typeof x !== 'undefined' && typeof y !== 'undefined') {
+    if (x !== middle && y !== middle) {
         this.direction = Croptool.DIRECTION_BOTH;
-    } else if (typeof x !== 'undefined') {
+    } else if (x !== middle) {
         this.direction = Croptool.DIRECTION_HORIZONTAL;
     } else {
         this.direction = Croptool.DIRECTION_VERTICAL;
@@ -592,51 +802,17 @@ Croptool.prototype.applyOrigin = function ( origin ) {
  */
 Croptool.prototype.getCursor = function ( origin ) {
 
+    var x,
+        y;
+
     if (!origin) {
         return 'default';
     }
 
-    if (typeof origin.x === 'undefined') {
+    x = 'x' + origin.x * 100;
+    y = 'y' + origin.y * 100;
 
-        // origin is not in any corner
-        if (typeof origin.y === 'undefined') {
-            return 'move';
-
-        // origin is on bottom or top (mouse is on opposite side of selection)
-        } else {
-            return 'ns-resize';
-        }
-
-    } else if (origin.x) {
-
-        // origin is on right (mouse is on left side of selection)
-        if (typeof origin.y === 'undefined') {
-            return 'ew-resize';
-
-        // origin is on bottom right (mouse is on top left corner)
-        } else if (origin.y) {
-            return 'nwse-resize';
-
-        // origin is on top right (mouse is on bottom left corner)
-        } else {
-            return 'nesw-resize';
-        }
-
-    } else {
-
-        // origin is on left (mouse is on right side of selection)
-        if (typeof origin.y === 'undefined') {
-            return 'ew-resize';
-
-        // origin is on bottom left (mouse is on top right corner)
-        } else if (origin.y) {
-            return 'nesw-resize';
-
-        // origin is on top left (mouse is on bottom right corner)
-        } else {
-            return 'nwse-resize';
-        }
-    }
+    return (Croptool.cursors[x] && Croptool.cursors[x][y]) || 'default';
 };
 
 /*
@@ -752,46 +928,16 @@ Croptool.prototype.dragStart = function ( e ) {
         };
 
         // used when mode is normal
-        this.drag.end = (function (that) {
-
-            var x,
-                y;
-
-            if (typeof origin.x !== 'undefined') {
-                x = that.selection.x + that.selection.w * origin.x;
-            }
-
-            if (typeof origin.y !== 'undefined') {
-                y = that.selection.y + that.selection.h * origin.y;
-            }
-
-            return {
-                x: x,
-                y: y
-            };
-
-        }(this));
+        this.drag.end = {
+            x: this.selection.x + this.selection.w * origin.x,
+            y: this.selection.y + this.selection.h * origin.y
+        };
 
         // used when mode is centered
-        this.drag.center = (function (that) {
-
-            var x,
-                y;
-
-            if (typeof origin.x !== 'undefined') {
-                x = that.selection.x + that.selection.w * 0.5;
-            }
-
-            if (typeof origin.y !== 'undefined') {
-                y = that.selection.y + that.selection.h * 0.5;
-            }
-
-            return {
-                x: x,
-                y: y
-            };
-
-        }(this));
+        this.drag.center = {
+            x: this.selection.x + this.selection.w * 0.5,
+            y: this.selection.y + this.selection.h * 0.5
+        };
     }
 
     if (typeof this.options.onstart === 'function') {
@@ -857,24 +1003,14 @@ Croptool.prototype.updateSelection = function () {
     if (this.state === Croptool.STATE_MOVE) {
         selection.x = drag.original.x + drag.point.x - drag.init.x;
         selection.y = drag.original.y + drag.point.y - drag.init.y;
-
     } else {
 
         if (this.direction === Croptool.DIRECTION_BOTH) {
-            horizontal = this.getDimension(Croptool.DIRECTION_HORIZONTAL);
-            vertical = this.getDimension(Croptool.DIRECTION_VERTICAL);
-            selection.x = horizontal.position;
-            selection.w = horizontal.length;
-            selection.y = vertical.position;
-            selection.h = vertical.length;
-        } else if (this.direction === Croptool.DIRECTION_VERTICAL) {
-            vertical = this.getDimension(Croptool.DIRECTION_VERTICAL);
-            selection.y = vertical.position;
-            selection.h = vertical.length;
+            this.setDimensions(true, true);
+        } else if (this.direction === Croptool.DIRECTION_HORIZONTAL) {
+            this.setDimensions(true, false);
         } else {
-            horizontal = this.getDimension(Croptool.DIRECTION_HORIZONTAL);
-            selection.x = horizontal.position;
-            selection.w = horizontal.length;
+            this.setDimensions(false, true);
         }
     }
 
@@ -893,103 +1029,135 @@ Croptool.prototype.updateSelection = function () {
     this.requestUpdate();
 };
 
-Croptool.prototype.getDimension = function ( direction ) {
+Croptool.prototype.setDimensions = function (horizontal, vertical) {
 
-    var value1,
-        value2,
-        position,
-        length,
-        min,
-        max;
+    var options = this.options,
+        drag = this.drag,
+        diffX,
+        diffY,
+        ltrX,
+        ltrY,
+        minW,
+        minH,
+        maxW,
+        maxH,
+        x1,
+        x2,
+        y1,
+        y2;
 
-    if (direction === Croptool.DIRECTION_HORIZONTAL) {
-        value1 = this.drag.point.x;
-        min = this.options.min.wp;
-        max = this.options.max.wp;
+    x1 = drag.point.x;
+    y1 = drag.point.y;
 
-        if (this.mode === Croptool.MODE_NORMAL) {
-            value2 = this.drag.end.x;
-        } else {
-            value2 = this.drag.center.x;
-        }
-
-    } else {
-        value1 = this.drag.point.y;
-        min = this.options.min.hp;
-        max = this.options.max.hp;
-
-        if (this.mode === Croptool.MODE_NORMAL) {
-            value2 = this.drag.end.y;
-        } else {
-            value2 = this.drag.center.y;
-        }
-    }
+    minW = options.min.wp;
+    minH = options.min.hp;
+    maxW = options.max.wp;
+    maxH = options.max.hp;
 
     if (this.mode === Croptool.MODE_NORMAL) {
 
-        if (value1 > value2) {
-            max = Math.min(1 - value2, max);
-        } else {
-            max = Math.min(value2, max);
+        x2 = drag.end.x;
+        y2 = drag.end.y;
+
+        ltrX = x1 <= x2;
+        ltrY = y1 <= y2;
+
+        diffX = Math.abs(x1 - x2);
+        diffY = Math.abs(y1 - y2);
+
+        maxW = ltrX ? Math.min(x2, maxW) : Math.min(1 - x2, maxW);
+        maxH = ltrY ? Math.min(y2, maxH) : Math.min(1 - y2, maxH);
+
+        if (diffX > maxW) {
+            x1 = ltrX ? x2 - maxW : x2 + maxW;
         }
 
-        if (Math.abs(value1 - value2) > max) {
-            if (value1 > value2) {
-                value1 = value2 + max;
+        if (diffY > maxH) {
+            y1 = ltrY ? y2 - maxH : y2 + maxH;
+        }
+
+        if (diffX < minW) {
+            x1 = ltrX ? x2 - minW : x2 + minW;
+        }
+
+        if (diffY < minH) {
+            y1 = ltrY ? y2 - minH : y2 + minH;
+        }
+
+        if (horizontal) {
+
+            if (ltrX) {
+                this.selection.x = x1;
+                this.selection.w = x2 - x1;
             } else {
-                value1 = value2 - max;
+                this.selection.x = x2;
+                this.selection.w = x1 - x2;
             }
         }
 
-        if (Math.abs(value1 - value2) < min) {
-            if (value1 > value2) {
-                value1 = value2 + min;
-            } else {
-                value1 = value2 - min;
-            }
-        }
+        if (vertical) {
 
-        if (value1 > value2) {
-            position = value2;
-            length = value1 - value2;
-        } else {
-            position = value1;
-            length = value2 - value1;
+            if (ltrY) {
+                this.selection.y = y1;
+                this.selection.h = y2 - y1;
+            } else {
+                this.selection.y = y2;
+                this.selection.h = y1 - y2;
+            }
         }
 
     } else {
 
-        max = Math.min(value2 * 2, (1 - value2) * 2, max);
+        x2 = drag.center.x;
+        y2 = drag.center.y;
 
-        if (Math.abs(2 * (value1 - value2)) > max) {
-            if (value1 > value2) {
-                value1 = value2 + max / 2;
+        ltrX = x1 <= x2;
+        ltrY = y1 <= y2;
+
+        diffX = Math.abs(2 * (x1 - x2));
+        diffY = Math.abs(2 * (y1 - y2));
+
+        maxW = Math.min(x2 * 2, 2 * (1 - x2), maxW);
+        maxH = Math.min(y2 * 2, 2 * (1 - y2), maxH);
+
+        if (diffX > maxW) {
+            x1 = ltrX ? x2 - maxW / 2 : x2 + maxW / 2;
+        }
+
+        if (diffY > maxH) {
+            y1 = ltrY ? y2 - maxH / 2 : y2 + maxH / 2;
+        }
+
+        if (diffX < minW) {
+            x1 = ltrX ? x2 - minW / 2 : x2 + minW / 2;
+        }
+
+        if (diffY < minH) {
+            y1 = ltrY ? y2 - minH / 2 : y2 + minH / 2;
+        }
+
+        if (horizontal) {
+
+            if (ltrX) {
+                this.selection.x = x1;
+                this.selection.w = 2 * (x2 - x1);
             } else {
-                value1 = value2 - max / 2;
+                this.selection.x = 2 * x2 - x1;
+                this.selection.w = 2 * (x1 - x2);
             }
         }
 
-        if (Math.abs(2 * (value1 - value2)) < min) {
-            if (value1 > value2) {
-                value1 = value2 + min / 2;
-            } else {
-                value1 = value2 - min / 2;
-            }
-        }
+        if (vertical) {
 
-        if (value1 > value2) {
-            position = 2 * value2 - value1;
-            length = 2 * (value1 - value2);
-        } else {
-            position = value1;
-            length = 2 * (value2 - value1);
+            if (ltrY) {
+                this.selection.y = y1;
+                this.selection.h = 2 * (y2 - y1);
+            } else {
+                this.selection.y = 2 * y2 - y1;
+                this.selection.h = 2 * (y1 - y2);
+            }
         }
     }
-
-    return {
-        position: position,
-        length: length
-    };
 };
 
 $.croptool = function ( selector, value ) {

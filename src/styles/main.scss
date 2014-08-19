@@ -1,6 +1,4 @@
 
-$point-size: 6px;
-
 .croptool-wrapper {
     padding: 20px;
     max-width: 100%;
@@ -35,8 +33,8 @@ $point-size: 6px;
             .croptool-point {
                 position: absolute;
                 background: #FFF;
-                width: $point-size;
-                height: $point-size;
+                width: 6px;
+                height: 6px;
                 top: auto;
                 left: auto;
                 bottom: auto;
