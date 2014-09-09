@@ -14,53 +14,148 @@ Croptool = function ( element, options ) {
 
     var that = this;
 
+    /*
+     *
+     * Croptool is active as long as it has not been destroyed.
+     *
+     */
+    that.active = true;
+
+    /*
+     *
+     * If croptool has been initialized.
+     *
+     */
+    that.initialized = false;
+
+    /*
+     *
+     * Every croptool needs id, which is used as namespace when attaching
+     * events and as key when need reference to this intance.
+     *
+     */
+    that.id = Croptool.getId();
+
+    /*
+     *
+     * Saving reference to original element.
+     *
+     */
     that.element = element;
+
+    /*
+     *
+     * Cloning options object. 
+     *
+     */
     that.options = $.extend({}, options);
+
+    /*
+     *
+     * Initial value for mode.
+     *
+     */
     that.mode = Croptool.MODE_NORMAL;
+
+    /*
+     *
+     * Initial value for state.
+     *
+     */
     that.state = Croptool.STATE_NULL;
+
+    /*
+     *
+     * Initial value for direction.
+     *
+     */
     that.direction = Croptool.DIRECTION_BOTH;
 
-    that.initOptions(function () {
-        that.createDOM(element);
-        that.attachListeners();
+    /*
+     *
+     * Save instance.
+     *
+     */
+    Croptool.instances[that.id] = that;
 
-        if (that.selection) {
-            that.requestUpdate();
+    /*
+     *
+     * Adding reference to croptool instance id to original element data. This
+     * helps to find right croptool instance if croptool public methods are
+     * invoked.
+     *
+     */
+    element.croptool = this.id;
+
+    /*
+     *
+     * Initialize options. Note: this function might be asynchronous.
+     *
+     */
+    that.initOptions(function () {
+
+        /*
+         *
+         * Check if this instance has been destroyed while initing options
+         *
+         */
+        if (that.active) {
+
+            that.createDOM();
+            that.attachListeners();
+
+            /*
+             *
+             * Requesting layout update if there is initial selection
+             *
+             */
+            if (that.selection) {
+                that.requestUpdate();
+            }
+
+            that.initialized = true;
         }
     });
 };
 
 /*
  *
- * Mode where selection has origin on center.
+ * Keeping reference to all existing croptool instances.
+ *
+ */
+Croptool.instances = {};
+
+/*
+ *
+ * Mode in which selection has origin on center.
  *
  */
 Croptool.MODE_CENTER = 1;
 
 /*
  *
- * Mode where selection has origin on opposite corner/side of mouse pointer.
+ * Mode in which selection has origin on opposite corner/side of mouse pointer.
  *
  */
 Croptool.MODE_NORMAL = 2;
 
 /*
  *
- * State where no resizing or moving is happening.
+ * State in which no resizing or moving is happening.
  *
  */
 Croptool.STATE_NULL = 3;
 
 /*
  *
- * State where selection is movable.
+ * State in which selection is movable.
  *
  */
 Croptool.STATE_MOVE = 4;
 
 /*
  *
- * State where selection is resisable.
+ * State in which selection is resizable.
  *
  */
 Croptool.STATE_RESIZE = 5;
@@ -84,7 +179,7 @@ Croptool.DIRECTION_HORIZONTAL = 7;
 /*
  *
  * Selection is resized only on both axis. This happens when mouse is on any
- * corner of selection.
+ * of corners of selection.
  *
  */
 Croptool.DIRECTION_BOTH = 8;
@@ -159,16 +254,18 @@ Croptool.template = (function () {
     var wrapper = document.createElement('div'),
         container = document.createElement('div'),
         selection = document.createElement('div'),
+        information = document.createElement('div'),
         remdant = document.createElement('div'),
         point = document.createElement('div'),
         classes = 'top|top-right|right|bottom-right|bottom|bottom-left|left|top-left'.split('|'),
-        prefix = 'croptool-',
+        prefix = 'ct-',
         clone,
         i;
 
     wrapper.className = prefix + 'wrapper';
     container.className = prefix + 'container';
     selection.className = prefix + 'selection';
+    information.className = prefix + 'information';
     remdant.className = prefix + 'remnant';
     point.className = prefix + 'point';
 
@@ -184,6 +281,7 @@ Croptool.template = (function () {
         selection.appendChild(clone);
     }
 
+    selection.appendChild(information);
     container.appendChild(selection);
     wrapper.appendChild(container);
 
@@ -243,6 +341,7 @@ Croptool.getPointFromEvent = function ( e ) {
         touches = e.changedTouches;
         result.x = touches[0].pageX;
         result.y = touches[0].pageY;
+
     } else {
         result.x = e.pageX;
         result.y = e.pageY;
@@ -253,30 +352,65 @@ Croptool.getPointFromEvent = function ( e ) {
 
 /*
  *
+ * Get unique id for Croptool instance.
+ *
+ */
+Croptool.getId = (function () {
+
+    var prefix = 'ct-',
+        index = 1;
+
+    return function () {
+        return prefix + index++;
+    };
+
+}());
+
+/*
+ *
  * Creating DOM structure for crop tool.
  *
  */
-Croptool.prototype.createDOM = function ( element ) {
+Croptool.prototype.createDOM = function () {
 
-    var $element = $(element),
+    var $element = $(this.element),
         $wrapper = $(Croptool.template.cloneNode(true)),
-        $container = $('.croptool-container', $wrapper),
-        $selection = $('.croptool-selection', $wrapper),
+        $container = $('.ct-container', $wrapper),
+        $selection = $('.ct-selection', $wrapper),
+        $information = $('.ct-information', $wrapper),
         outline;
 
     this.elements = {
+        $wrapper: $wrapper,
         $container: $container,
         $selection: $selection,
+        $information: $information,
         container: $container[0],
-        selection: $selection[0]
+        selection: $selection[0],
+        information: $information[0]
     };
+
+    /*
+     *
+     * Original image must be in DOM.
+     *
+     */
+    if (!$element.parent().length) {
+        throw new Error('Image must be in DOM');
+    }
+
+    /*
+     *
+     * Croptool wrapper is placed after original element as its sibling.
+     *
+     */
+    $element.after($wrapper);
 
     /*
      *
      * Original image is detached from DOM and placed inside croptool container.
      *
      */
-    $element.parent().append($wrapper);
     $container.append($element);
 
     /*
@@ -300,6 +434,28 @@ Croptool.prototype.createDOM = function ( element ) {
 
 /*
  *
+ * Reverse DOM.
+ *
+ */
+Croptool.prototype.reverseDOM = function () {
+
+    /*
+     *
+     * Move original element out from croptool wrapper 
+     *
+     */
+    this.elements.$wrapper.after(this.element);
+
+    /*
+     *
+     * Remove wrapper and all it's content from DOM.
+     *
+     */
+    this.elements.$wrapper.remove();
+};
+
+/*
+ *
  * Attaching all neccessary listeners.
  *
  */
@@ -309,7 +465,7 @@ Croptool.prototype.attachListeners = function () {
         $body = $('body'),
         that = this;
 
-    $window.on('keydown', function ( e ) {
+    $window.on('keydown.' + that.id, function ( e ) {
 
         if ( e.which === 18 ) {
             that.mode = Croptool.MODE_CENTER;
@@ -320,7 +476,7 @@ Croptool.prototype.attachListeners = function () {
         }
     });
 
-    $window.on('keyup', function ( e ) {
+    $window.on('keyup.' + that.id, function ( e ) {
 
         if ( e.which === 18 ) {
             that.mode = Croptool.MODE_NORMAL;
@@ -331,28 +487,56 @@ Croptool.prototype.attachListeners = function () {
         }
     });
 
-    $body.on('mousedown', function ( e ) {
+    $body.on('mousedown.' + that.id, function ( e ) {
 
         if (e.which === 1) {
             that.dragStart(e);
         }
     });
 
-    $body.on('mousemove', function ( e ) {
+    $body.on('mousemove.' + that.id, function ( e ) {
         that.dragMove(e);
     });
 
-    $body.on('mouseup', function ( e ) {
+    $body.on('mouseup.' + that.id, function ( e ) {
         that.dragEnd(e);
     });
 
-    $body.on('mouseleave', function ( e ) {
+    $body.on('mouseleave.' + that.id, function ( e ) {
         that.dragEnd(e);
     });
 
-    $(document).on('mouseleave', function ( e ) {
+    $(document).on('mouseleave.' + that.id, function ( e ) {
         that.dragEnd(e);
     });
+};
+
+/*
+ *
+ * Detaching all listeners.
+ *
+ */
+Croptool.prototype.detachListeners = function () {
+    $(window).off('.' + this.id);
+    $('body').off('.' + this.id);
+    $(document).off('.' + this.id);
+};
+
+Croptool.prototype.destroy = function () {
+
+    Croptool.instances[this.id] = null;
+
+    if (this.initialized) {
+        this.detachListeners();
+        this.reverseDOM();
+    }
+
+    /*
+     *
+     * Remove instance reference from original element.
+     *
+     */
+    this.element.croptool = undefined;
 };
 
 /*
@@ -507,15 +691,17 @@ Croptool.prototype.requestUpdate = function () {
 
 /*
  *
- * This updates DOM according to data in selection object. Invoked only by
- * requestUpdate method.
+ * This updates DOM according to data in selection object.
  *
  */
 Croptool.prototype.doUpdate = function () {
 
+    var pixels = this.convertSelection(this.selection);
+
     this.elements.$selection.css('display', 'none');
 
     if (this.selection) {
+        this.elements.$information.html(pixels.w + ' x ' + pixels.h);
         this.elements.$selection.css('left', this.selection.x * 100 + '%');
         this.elements.$selection.css('top', this.selection.y * 100 + '%');
         this.elements.$selection.css('width', this.selection.w * 100 + '%');
@@ -680,7 +866,7 @@ Croptool.prototype.testSelectionHit = function ( point ) {
 
     /*
      *
-     * If there is no selection, point cannot be over selection
+     * If there is no selection, point cannot be on top of it
      *
      */
     if (!sel) {
@@ -728,7 +914,7 @@ Croptool.prototype.getOrigin = function ( point ) {
 
     /*
      *
-     * If there is no selection, there is no origin.
+     * No selection, no origin.
      *
      */
     if (!sel) {
@@ -856,59 +1042,127 @@ Croptool.prototype.dragStart = function ( e ) {
         origin,
         state;
 
+    /*
+     *
+     * If hit point is not on top of component -> do nothing
+     *
+     */
     if (!this.testComponentHit(point)) {
         return;
 
+    /*
+     *
+     * Test if hit point is not on top of selection
+     *
+     */
     } else if (!this.testSelectionHit(point)) {
 
+        /*
+         *
+         * If there is no selection, create a new one
+         *
+         */
         if (!this.selection) {
             this.selection = {};
-        } else {
 
-            if (options.persistent) {
-                e.preventDefault();
-                return;
-            }
+        /*
+         *
+         * Otherwise if Croptool is in persistent mode, no new selection
+         * should be made.
+         *
+         */
+        } else if (options.persistent) {
+            e.preventDefault();
+            return;
         }
 
+        /*
+         *
+         * Selection always starts from single point with no width or height.
+         * No need to worry about min.width or min.height settings because
+         * those would be checked later.
+         *
+         */
         this.selection.x = point.x;
         this.selection.y = point.y;
         this.selection.w = 0;
         this.selection.h = 0;
     }
 
+    /*
+     *
+     * If alt key is pressed -> switching mode to centered
+     *
+     */
     if (e.altKey) {
         this.mode = Croptool.MODE_CENTER;
     } else {
         this.mode = Croptool.MODE_NORMAL;
     }
 
+    /*
+     *
+     * Prevent default to prevent image dragging.
+     *
+     */
     e.preventDefault();
 
+    /*
+     *
+     * Origin of resizing.
+     *
+     */
     origin = this.getOrigin(point);
 
+    /*
+     *
+     * Applying origin to system. Invoking this function will will set state
+     * to move or resize. If state is resize, it will also set direction of
+     * resizing.
+     *
+     */
     this.applyOrigin(origin);
 
     if (this.state === Croptool.STATE_MOVE) {
 
+        /*
+         *
+         * Quit if selection is not movable and state is on move position.
+         *
+         */
         if (!options.movable) {
             this.state = Croptool.STATE_NULL;
             return;
         }
 
-        // dynamic mousepoint
+        /*
+         *
+         * Dynamic mousepoint. Changed everytime when user moves a cursor.
+         * Initial value is naturally the current position of mouse.
+         *
+         */
         this.drag.point = {
             x: point.x,
             y: point.y
         };
 
-        // initial mousepoint
+        /*
+         *
+         * Initial mousepoint. Not changed until overridden again by this very
+         * same expression.
+         *
+         */
         this.drag.init = {
             x: point.x,
             y: point.y
         };
 
-        // original selection point
+        /*
+         *
+         * Initial selection x and y position. Not changed until overridden
+         * again by this very same expression.
+         *
+         */
         this.drag.original = {
             x: this.selection.x,
             y: this.selection.y
@@ -916,41 +1170,81 @@ Croptool.prototype.dragStart = function ( e ) {
 
     } else {
 
+        /*
+         *
+         * Quit if selection is not resizable and state is on resize position.
+         *
+         */
         if (!options.resizable) {
             this.state = Croptool.STATE_NULL;
             return;
         }
 
-        // dynamic mousepoint
+        /*
+         *
+         * Dynamic mousepoint. Changed everytime when user moves a cursor.
+         * Initial value is naturally the mouse point.
+         *
+         */
         this.drag.point = {
             x: point.x,
             y: point.y
         };
 
-        // used when mode is normal
+        /*
+         *
+         * Origin point of current drag when mode is in normal mode.
+         *
+         */
         this.drag.end = {
             x: this.selection.x + this.selection.w * origin.x,
             y: this.selection.y + this.selection.h * origin.y
         };
 
-        // used when mode is centered
+        /*
+         *
+         * Origin point of current drag when mode is in center mode.
+         *
+         */
         this.drag.center = {
             x: this.selection.x + this.selection.w * 0.5,
             y: this.selection.y + this.selection.h * 0.5
         };
     }
 
+    /*
+     *
+     * Call the onstart callback if exists.
+     *
+     */
     if (typeof this.options.onstart === 'function') {
         this.options.onstart(this.convertSelection(this.selection));
     }
 
+    /*
+     *
+     * Updating mouse cursor.
+     *
+     */
     this.setCursor(this.getCursor(origin));
 };
 
+/*
+ *
+ * Called when user moves mouse on croptool area. There is 3 main tasks
+ * for this function: update current mouse position, update selection and
+ * update mouse cursor.
+ *
+ */
 Croptool.prototype.dragMove = function ( e ) {
 
     var point = this.convertPoint(Croptool.getPointFromEvent(e));
 
+    /*
+     *
+     * If alt key is pressed -> switching mode to centered
+     *
+     */
     if (e.altKey) {
         this.mode = Croptool.MODE_CENTER;
     } else {
@@ -961,21 +1255,53 @@ Croptool.prototype.dragMove = function ( e ) {
 
         e.preventDefault();
 
+        /*
+         *
+         * Updating current mouse position
+         *
+         */
         this.drag.point = point;
+
+        /*
+         *
+         * Updating selection
+         *
+         */
         this.updateSelection();
 
+        /*
+         *
+         * Call the onchange callback if exists.
+         *
+         */
         if (typeof this.options.onchange === 'function') {
             this.options.onchange(this.convertSelection(this.selection));
         }
     }
 
+    /*
+     *
+     * Updating mouse cursor.
+     *
+     */
     this.setCursor(this.getCursor(this.getOrigin(point)));
 };
 
+/*
+ *
+ * Called when user lift mouse button on croptool area or moves mouse out of
+ * window are (switching tabs or something like that).
+ *
+ */
 Croptool.prototype.dragEnd = function ( e ) {
 
     e.preventDefault();
 
+    /*
+     *
+     * If alt key is pressed -> switching mode to centered
+     *
+     */
     if (e.altKey) {
         this.mode = Croptool.MODE_CENTER;
     } else {
@@ -983,16 +1309,37 @@ Croptool.prototype.dragEnd = function ( e ) {
     }
 
     if (this.state !== Croptool.STATE_NULL) {
+
+        /*
+         *
+         * Moving/resizing has ended.
+         *
+         */
         this.state = Croptool.STATE_NULL;
 
+        /*
+         *
+         * Call the onend callback if exists.
+         *
+         */
         if (typeof this.options.onend === 'function') {
             this.options.onend(this.convertSelection(this.selection));
         }
     }
 
+    /*
+     *
+     * Updating mouse cursor.
+     *
+     */
     this.setCursor(this.getCursor(this.getOrigin(this.convertPoint(Croptool.getPointFromEvent(e)))));
 };
 
+/*
+ *
+ * Updates selection and sends request to update selection visually.
+ *
+ */
 Croptool.prototype.updateSelection = function () {
 
     var selection = this.selection,
@@ -1000,35 +1347,78 @@ Croptool.prototype.updateSelection = function () {
         horizontal,
         vertical;
 
+    /*
+     *
+     * If state is on move state, calculating new selection area is pretty
+     * simple and can be done in few lines.
+     *
+     */
     if (this.state === Croptool.STATE_MOVE) {
         selection.x = drag.original.x + drag.point.x - drag.init.x;
         selection.y = drag.original.y + drag.point.y - drag.init.y;
+
+    /*
+     *
+     * Dragging needs a lot more.
+     *
+     */
     } else {
 
         if (this.direction === Croptool.DIRECTION_BOTH) {
+
+            // update both
             this.setDimensions(true, true);
         } else if (this.direction === Croptool.DIRECTION_HORIZONTAL) {
+
+            // update horizontally
             this.setDimensions(true, false);
         } else {
+
+            // update vertically
             this.setDimensions(false, true);
         }
     }
 
+    /*
+     *
+     * Before requesting update on layout it needs to be tested if selection
+     * area is inside croptool area. This test should be done even if state
+     * is on resize, because in some cases setDimensions may set selection area
+     * outside of croptool area.
+     *
+     */
+
+    // horizontally
     if (selection.x < 0) {
         selection.x = 0;
     } else if (selection.x + selection.w > 1) {
         selection.x -= selection.x + selection.w - 1;
     }
 
+    // vertically
     if (selection.y < 0) {
         selection.y = 0;
     } else if (selection.y + selection.h > 1) {
         selection.y -= selection.y + selection.h - 1;
     }
 
+    /*
+     *
+     * Requesting visual update. Note that nothing is changed immediately
+     * because system is waiting for optimal time to update layout. 
+     *
+     */
     this.requestUpdate();
 };
 
+/*
+ *
+ * Sets dimensions of selection area. Takes available points (init, current and
+ * origin) and converts them to validated selection. Selection should not
+ * overflow croptool area and it should respect min and max values. Dimensions
+ * may be updated horizontally, vertically or both.
+ *
+ */
 Croptool.prototype.setDimensions = function (horizontal, vertical) {
 
     var options = this.options,
@@ -1187,14 +1577,20 @@ $.fn.croptool = function ( selector, value ) {
      */
     if (typeof selector === 'string') {
 
-        
+        switch (selector) {
+
+            case 'destroy':
+                return this.each(function () {
+                    Croptool.instances[this.croptool].destroy();
+                });
+        }
 
     } else {
 
         options = $.extend(Croptool.defaults, selector);
 
         return this.each(function () {
-            new Croptool(this, options);
+            this.ct = new Croptool(this, options);
         });
     }
 };

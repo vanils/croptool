@@ -1,21 +1,19 @@
-.croptool-wrapper {
-  padding: 20px;
-  max-width: 100%;
-  max-width: 700px;
-}
-.croptool-wrapper .croptool-container {
+.ct-wrapper .ct-container {
   overflow: hidden;
   position: relative;
   display: block;
 }
-.croptool-wrapper .croptool-container img {
+.ct-wrapper .ct-container img {
   pointer-events: none;
   display: block;
   width: 100%;
   height: auto;
 }
-.croptool-wrapper .croptool-container .croptool-selection {
+.ct-wrapper .ct-container .ct-selection {
   -webkit-tranform: translate3d(0, 0, 0);
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
   display: none;
   top: 0;
   left: 0;
@@ -28,7 +26,18 @@
   outline-style: solid;
   outline-width: 5120px;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point {
+.ct-wrapper .ct-container .ct-selection .ct-information {
+  font-family: 'Times Roman';
+  position: absolute;
+  background: #FFF;
+  font-size: 10px;
+  display: block;
+  opacity: 0.6;
+  padding: 0 2px;
+  right: -1px;
+  top: -1px;
+}
+.ct-wrapper .ct-container .ct-selection .ct-point {
   position: absolute;
   background: #FFF;
   width: 6px;
@@ -38,75 +47,75 @@
   bottom: auto;
   right: auto;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-top {
+.ct-wrapper .ct-container .ct-selection .ct-point-top {
   margin: -4px 0 0 -3px;
   left: 50%;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-top-right {
+.ct-wrapper .ct-container .ct-selection .ct-point-top-right {
   margin: -4px -4px 0 0;
   right: 0;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-right {
+.ct-wrapper .ct-container .ct-selection .ct-point-right {
   margin: -3px -4px 0 0;
   top: 50%;
   right: 0;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-bottom-right {
+.ct-wrapper .ct-container .ct-selection .ct-point-bottom-right {
   margin: 0 -4px -4px 0;
   right: 0;
   bottom: 0;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-bottom {
+.ct-wrapper .ct-container .ct-selection .ct-point-bottom {
   margin: 0 0 -4px -3px;
   left: 50%;
   bottom: 0;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-bottom-left {
+.ct-wrapper .ct-container .ct-selection .ct-point-bottom-left {
   margin: 0 0 -4px -4px;
   left: 0;
   bottom: 0;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-left {
+.ct-wrapper .ct-container .ct-selection .ct-point-left {
   margin: -3px 0 0 -4px;
   left: 0;
   top: 50%;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-point-top-left {
+.ct-wrapper .ct-container .ct-selection .ct-point-top-left {
   margin: -4px 0 0 -4px;
   left: 0;
   top: 0;
 }
-.croptool-wrapper .croptool-container .croptool-selection .croptool-remnant {
+.ct-wrapper .ct-container .ct-selection .ct-remnant {
   display: none;
 }
-.croptool-wrapper .croptool-container .croptool-selection.no-dots .croptool-point {
+.ct-wrapper .ct-container .ct-selection.no-dots .ct-point {
   display: none;
 }
-.croptool-wrapper .croptool-container .croptool-selection.no-outline .croptool-remnant {
+.ct-wrapper .ct-container .ct-selection.no-outline .ct-remnant {
   display: block;
   position: absolute;
   background: #000;
   background: rgba(0, 0, 0, 0.8);
 }
-.croptool-wrapper .croptool-container .croptool-selection.no-outline .croptool-remnant-top {
+.ct-wrapper .ct-container .ct-selection.no-outline .ct-remnant-top {
   top: -10001px;
   left: -1px;
   right: -1px;
   height: 10000px;
 }
-.croptool-wrapper .croptool-container .croptool-selection.no-outline .croptool-remnant-right {
+.ct-wrapper .ct-container .ct-selection.no-outline .ct-remnant-right {
   top: -5000px;
   right: -10001px;
   width: 10000px;
   height: 10000px;
 }
-.croptool-wrapper .croptool-container .croptool-selection.no-outline .croptool-remnant-bottom {
+.ct-wrapper .ct-container .ct-selection.no-outline .ct-remnant-bottom {
   bottom: -10001px;
   left: -1px;
   right: -1px;
   height: 10000px;
 }
-.croptool-wrapper .croptool-container .croptool-selection.no-outline .croptool-remnant-left {
+.ct-wrapper .ct-container .ct-selection.no-outline .ct-remnant-left {
   bottom: -5000px;
   left: -10001px;
   width: 10000px;

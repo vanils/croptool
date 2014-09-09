@@ -1,10 +1,7 @@
 
-.croptool-wrapper {
-    padding: 20px;
-    max-width: 100%;
-    max-width: 700px;
+.ct-wrapper {
 
-    .croptool-container {
+    .ct-container {
         overflow: hidden;
         position: relative;
         display: block;
@@ -16,8 +13,11 @@
             height: auto;
         }
 
-        .croptool-selection {
+        .ct-selection {
             -webkit-tranform: translate3d(0,0,0);
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
             display: none;
             top: 0;
             left: 0;
@@ -30,7 +30,19 @@
             outline-style: solid;
             outline-width: 5120px;
 
-            .croptool-point {
+            .ct-information {
+                font-family: 'Times Roman';
+                position: absolute;
+                background: #FFF;
+                font-size: 10px;
+                display: block;
+                opacity: 0.6;
+                padding: 0 2px;
+                right: -1px;
+                top: -1px;
+            }
+
+            .ct-point {
                 position: absolute;
                 background: #FFF;
                 width: 6px;
@@ -41,94 +53,94 @@
                 right: auto;
             }
 
-            .croptool-point-top {
+            .ct-point-top {
                 margin: -4px 0 0 -3px;
                 left: 50%;
             }
 
-            .croptool-point-top-right {
+            .ct-point-top-right {
                 margin: -4px -4px 0 0;
                 right: 0;
             }
 
-            .croptool-point-right {
+            .ct-point-right {
                 margin: -3px -4px 0 0;
                 top: 50%;
                 right: 0;
             }
 
-            .croptool-point-bottom-right {
+            .ct-point-bottom-right {
                 margin: 0 -4px -4px 0;
                 right: 0;
                 bottom: 0;
             }
 
-            .croptool-point-bottom {
+            .ct-point-bottom {
                 margin: 0 0 -4px -3px;
                 left: 50%;
                 bottom: 0;
             }
 
-            .croptool-point-bottom-left {
+            .ct-point-bottom-left {
                 margin: 0 0 -4px -4px;
                 left: 0;
                 bottom: 0;
             }
 
-            .croptool-point-left {
+            .ct-point-left {
                 margin: -3px 0 0 -4px;
                 left: 0;
                 top: 50%;
             }
 
-            .croptool-point-top-left {
+            .ct-point-top-left {
                 margin: -4px 0 0 -4px;
                 left: 0;
                 top: 0;
             }
 
-            .croptool-remnant {
+            .ct-remnant {
                 display: none;
             }
 
             &.no-dots {
 
-                .croptool-point {
+                .ct-point {
                     display: none;
                 }
             }
 
             &.no-outline {
 
-                .croptool-remnant {
+                .ct-remnant {
                     display: block;
                     position: absolute;
                     background: #000;
                     background: rgba(0, 0, 0, 0.8);
                 }
 
-                .croptool-remnant-top {
+                .ct-remnant-top {
                     top: -10001px;
                     left: -1px;
                     right: -1px;
                     height: 10000px;
                 }
 
-                .croptool-remnant-right {
+                .ct-remnant-right {
                     top: -5000px;
                     right: -10001px;
                     width: 10000px;
                     height: 10000px;
                 }
 
-                .croptool-remnant-bottom {
+                .ct-remnant-bottom {
                     bottom: -10001px;
                     left: -1px;
                     right: -1px;
                     height: 10000px;
                 }
 
-                .croptool-remnant-left {
+                .ct-remnant-left {
                     bottom: -5000px;
                     left: -10001px;
                     width: 10000px;
